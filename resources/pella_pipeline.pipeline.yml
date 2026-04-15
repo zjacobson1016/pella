@@ -1,0 +1,27 @@
+resources:
+  pipelines:
+    pella_parts_forecasting:
+      name: "[${bundle.target}] Pella Parts Forecasting Pipeline"
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      development: true
+      channel: PREVIEW
+      continuous: false
+      configuration:
+        catalog: ${var.catalog}
+        schema: ${var.schema}
+        volume: ${var.volume}
+        raw_data_path: /Volumes/${var.catalog}/${var.schema}/${var.volume}
+      libraries:
+        - file:
+            path: ../src/pipeline/bronze.py
+        - file:
+            path: ../src/pipeline/silver.py
+        - file:
+            path: ../src/pipeline/gold_dimensions.py
+        - file:
+            path: ../src/pipeline/gold_facts.py
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
