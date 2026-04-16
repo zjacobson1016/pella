@@ -18,6 +18,7 @@ targets:
     mode: development
     workspace:
       profile: group-demo
+      host: ${DATABRICKS_HOST}
     variables:
       catalog: "mfg_mc_se_sa"
       schema: "pella"
@@ -26,6 +27,9 @@ targets:
     mode: production
     workspace:
       profile: group-demo
+      host: ${DATABRICKS_HOST}
+    run_as:
+      service_principal_name: ${DATABRICKS_SP_NAME}
     variables:
       catalog: "mfg_mc_se_sa"
       schema: "pella"
