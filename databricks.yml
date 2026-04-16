@@ -1,0 +1,31 @@
+bundle:
+  name: pella-parts-forecasting
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    default: "mfg_mc_se_sa"
+  schema:
+    default: "pella"
+  volume:
+    default: "raw_data"
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      profile: group-demo
+    variables:
+      catalog: "mfg_mc_se_sa"
+      schema: "pella"
+
+  prod:
+    mode: production
+    workspace:
+      profile: group-demo
+    variables:
+      catalog: "mfg_mc_se_sa"
+      schema: "pella"
