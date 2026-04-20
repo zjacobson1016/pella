@@ -38,20 +38,16 @@ from pyspark.sql.functions import col, expr
 # When piece_part_price or category changes, the old value is overwritten.
 # After batch 2: shows ONLY the latest price for each part.
 # ---------------------------------------------------------------------------
+dp.create_streaming_table("dim_part_type1")
+
 dp.create_auto_cdc_flow(
-    name="dim_part_type1",
+    target="dim_part_type1",
     source="silver_parts",
     keys=["part_id"],
     sequence_by=col("_sequence"),
     apply_as_deletes=expr("_op = 'DELETE'"),
     except_column_list=["_op", "_sequence"],
-    stored_as_scd_type=1,
-    cluster_by=["part_id"],
-    comment=(
-        "SCD Type 1 part dimension. Overwrites on change — always current state. "
-        "Compare with dim_part_type2 to see the difference in history tracking."
-    ),
-    table_properties={"quality": "gold", "layer": "dimension", "scd_type": "1"},
+    stored_as_scd_type="1",
 )
 
 
@@ -62,20 +58,16 @@ dp.create_auto_cdc_flow(
 # After batch 2: two rows per updated part — original price and new price.
 # Query current rows: WHERE __END_AT IS NULL
 # ---------------------------------------------------------------------------
+dp.create_streaming_table("dim_part_type2")
+
 dp.create_auto_cdc_flow(
-    name="dim_part_type2",
+    target="dim_part_type2",
     source="silver_parts",
     keys=["part_id"],
     sequence_by=col("_sequence"),
     apply_as_deletes=expr("_op = 'DELETE'"),
     except_column_list=["_op", "_sequence"],
     stored_as_scd_type=2,
-    cluster_by=["part_id"],
-    comment=(
-        "SCD Type 2 part dimension. Preserves full price/category change history. "
-        "Current row: __END_AT IS NULL. Use __START_AT / __END_AT to time-travel pricing."
-    ),
-    table_properties={"quality": "gold", "layer": "dimension", "scd_type": "2"},
 )
 
 
@@ -84,19 +76,16 @@ dp.create_auto_cdc_flow(
 #
 # Tier upgrades (e.g., STANDARD → PREMIUM) overwrite the old tier value.
 # ---------------------------------------------------------------------------
+dp.create_streaming_table("dim_customer_type1")
+
 dp.create_auto_cdc_flow(
-    name="dim_customer_type1",
+    target="dim_customer_type1",
     source="silver_customers",
     keys=["customer_id"],
     sequence_by=col("_sequence"),
     apply_as_deletes=expr("_op = 'DELETE'"),
     except_column_list=["_op", "_sequence"],
-    stored_as_scd_type=1,
-    cluster_by=["customer_id"],
-    comment=(
-        "SCD Type 1 customer dimension. Overwrites on change — always current address/tier."
-    ),
-    table_properties={"quality": "gold", "layer": "dimension", "scd_type": "1"},
+    stored_as_scd_type="1",
 )
 
 
@@ -106,18 +95,14 @@ dp.create_auto_cdc_flow(
 # Captures every tier upgrade and address change as a versioned row.
 # After batch 2: reveals the customer's tier journey over time.
 # ---------------------------------------------------------------------------
+dp.create_streaming_table("dim_customer_type2")
+
 dp.create_auto_cdc_flow(
-    name="dim_customer_type2",
+    target="dim_customer_type2",
     source="silver_customers",
     keys=["customer_id"],
     sequence_by=col("_sequence"),
     apply_as_deletes=expr("_op = 'DELETE'"),
     except_column_list=["_op", "_sequence"],
     stored_as_scd_type=2,
-    cluster_by=["customer_id"],
-    comment=(
-        "SCD Type 2 customer dimension. Preserves address and tier change history. "
-        "Current row: __END_AT IS NULL."
-    ),
-    table_properties={"quality": "gold", "layer": "dimension", "scd_type": "2"},
 )

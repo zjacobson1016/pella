@@ -1,0 +1,988 @@
+{
+  "datasets": [
+    {
+      "name": "wo_summary",
+      "displayName": "Work Order Summary",
+      "queryLines": [
+        "SELECT COUNT(*) as total_work_orders, ",
+        "COUNT(DISTINCT customer_id) as unique_customers, ",
+        "COUNT(DISTINCT part_id) as unique_parts, ",
+        "ROUND(AVG(total_amount), 2) as avg_quote_amount, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days_to_complete ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL "
+      ]
+    },
+    {
+      "name": "wo_by_type",
+      "displayName": "Work Orders by Type",
+      "queryLines": [
+        "SELECT wo_type, COUNT(*) as wo_count, ",
+        "ROUND(AVG(total_amount), 2) as avg_amount, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL GROUP BY wo_type ORDER BY wo_count DESC "
+      ]
+    },
+    {
+      "name": "wo_by_priority",
+      "displayName": "Work Orders by Priority",
+      "queryLines": [
+        "SELECT priority, COUNT(*) as wo_count, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL GROUP BY priority ORDER BY wo_count DESC "
+      ]
+    },
+    {
+      "name": "wo_monthly",
+      "displayName": "Monthly Trend",
+      "queryLines": [
+        "SELECT DATE_TRUNC(\"MONTH\", created_date) as month, ",
+        "COUNT(*) as wo_count, ",
+        "ROUND(SUM(total_amount), 2) as total_value ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL ",
+        "GROUP BY DATE_TRUNC(\"MONTH\", created_date) ORDER BY month "
+      ]
+    },
+    {
+      "name": "wo_by_tier",
+      "displayName": "Work Orders by Customer Tier",
+      "queryLines": [
+        "SELECT customer_tier, COUNT(*) as wo_count, ",
+        "ROUND(SUM(total_amount), 2) as total_value, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL GROUP BY customer_tier ORDER BY total_value DESC "
+      ]
+    },
+    {
+      "name": "wo_by_constraint",
+      "displayName": "Work Orders by Availability Constraint",
+      "queryLines": [
+        "SELECT availability_constraint, COUNT(*) as wo_count, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL GROUP BY availability_constraint ORDER BY wo_count DESC "
+      ]
+    },
+    {
+      "name": "wo_detail",
+      "displayName": "Work Order Detail",
+      "queryLines": [
+        "SELECT wo_type, priority, region, customer_tier, ",
+        "COUNT(*) as wo_count, ",
+        "ROUND(SUM(total_amount), 2) as total_value, ",
+        "ROUND(AVG(days_to_completion), 1) as avg_days, ",
+        "ROUND(AVG(parts_cost), 2) as avg_parts_cost, ",
+        "ROUND(AVG(labor_cost), 2) as avg_labor_cost ",
+        "FROM mfg_mc_se_sa.pella.fact_work_order_completion ",
+        "WHERE quote_id IS NOT NULL ",
+        "GROUP BY wo_type, priority, region, customer_tier ",
+        "ORDER BY total_value DESC LIMIT 50 "
+      ]
+    },
+    {
+      "name": "df_summary",
+      "displayName": "Demand Fulfillment Summary",
+      "queryLines": [
+        "SELECT COUNT(DISTINCT po_id) as total_pos, ",
+        "COUNT(DISTINCT signal_id) as total_signals, ",
+        "COUNT(DISTINCT part_id) as unique_parts, ",
+        "ROUND(SUM(po_total_value), 2) as total_po_value, ",
+        "ROUND(AVG(receipt_variance_days), 1) as avg_delivery_variance, ",
+        "ROUND(AVG(days_to_payment), 1) as avg_days_to_payment ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment "
+      ]
+    },
+    {
+      "name": "df_by_status",
+      "displayName": "POs by Status",
+      "queryLines": [
+        "SELECT po_status, COUNT(DISTINCT po_id) as po_count, ",
+        "ROUND(SUM(po_total_value), 2) as total_value ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE po_id IS NOT NULL ",
+        "GROUP BY po_status ORDER BY po_count DESC "
+      ]
+    },
+    {
+      "name": "df_by_signal_type",
+      "displayName": "Forecast by Signal Type",
+      "queryLines": [
+        "SELECT signal_type, ",
+        "COUNT(DISTINCT signal_id) as signal_count, ",
+        "ROUND(AVG(forecast_variance), 1) as avg_variance ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE signal_id IS NOT NULL ",
+        "GROUP BY signal_type ORDER BY signal_count DESC "
+      ]
+    },
+    {
+      "name": "df_monthly",
+      "displayName": "Monthly PO Trend",
+      "queryLines": [
+        "SELECT DATE_TRUNC('MONTH', po_date) as month, ",
+        "COUNT(DISTINCT po_id) as po_count, ",
+        "ROUND(SUM(po_total_value), 2) as total_value ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE po_id IS NOT NULL ",
+        "GROUP BY DATE_TRUNC('MONTH', po_date) ORDER BY month "
+      ]
+    },
+    {
+      "name": "df_by_category",
+      "displayName": "Demand by Part Category",
+      "queryLines": [
+        "SELECT category, ",
+        "COUNT(DISTINCT po_id) as po_count, ",
+        "ROUND(SUM(po_total_value), 2) as total_value, ",
+        "ROUND(AVG(receipt_variance_days), 1) as avg_delivery_variance ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE po_id IS NOT NULL AND category IS NOT NULL ",
+        "GROUP BY category ORDER BY total_value DESC "
+      ]
+    },
+    {
+      "name": "df_payment",
+      "displayName": "Payment Status",
+      "queryLines": [
+        "SELECT payment_status, ",
+        "COUNT(DISTINCT invoice_id) as invoice_count, ",
+        "ROUND(SUM(invoice_amount), 2) as total_amount ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE invoice_id IS NOT NULL ",
+        "GROUP BY payment_status ORDER BY invoice_count DESC "
+      ]
+    },
+    {
+      "name": "df_detail",
+      "displayName": "Demand Fulfillment Detail",
+      "queryLines": [
+        "SELECT category, signal_type, po_status, demand_region, ",
+        "COUNT(DISTINCT po_id) as po_count, ",
+        "ROUND(SUM(po_total_value), 2) as total_po_value, ",
+        "ROUND(AVG(forecast_variance), 1) as avg_forecast_variance, ",
+        "ROUND(AVG(receipt_variance_days), 1) as avg_delivery_variance, ",
+        "ROUND(SUM(invoice_amount), 2) as total_invoiced ",
+        "FROM mfg_mc_se_sa.pella.fact_demand_fulfillment ",
+        "WHERE po_id IS NOT NULL ",
+        "GROUP BY category, signal_type, po_status, demand_region ",
+        "ORDER BY total_po_value DESC LIMIT 50 "
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "Work Order Completion",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Pella Work Order Completion Dashboard"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "subtitle",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Work order lifecycle analytics \u2014 quote value, completion time, and constraint analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-total-wos",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_summary",
+                  "fields": [
+                    {
+                      "name": "total_work_orders",
+                      "expression": "`total_work_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_work_orders",
+                  "displayName": "Total Work Orders",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total Work Orders"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-avg-quote",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_summary",
+                  "fields": [
+                    {
+                      "name": "avg_quote_amount",
+                      "expression": "`avg_quote_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_quote_amount",
+                  "displayName": "Avg Quote Amount",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Quote Amount"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-avg-days",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_summary",
+                  "fields": [
+                    {
+                      "name": "avg_days_to_complete",
+                      "expression": "`avg_days_to_complete`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_days_to_complete",
+                  "displayName": "Avg Days to Complete"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Days to Complete"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "section-trends",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Monthly Trends"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "chart-monthly-volume",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_monthly",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "wo_count",
+                      "expression": "`wo_count`"
+                    },
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Month"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "wo_count",
+                      "displayName": "Work Orders"
+                    },
+                    {
+                      "fieldName": "total_value",
+                      "displayName": "Total Value ($)"
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Monthly Work Order Volume & Value"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "section-breakdown",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Work Order Breakdown"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "chart-by-type",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_by_type",
+                  "fields": [
+                    {
+                      "name": "wo_type",
+                      "expression": "`wo_type`"
+                    },
+                    {
+                      "name": "wo_count",
+                      "expression": "`wo_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "wo_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Work Order Type"
+                },
+                "y": {
+                  "fieldName": "wo_count",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Work Orders by Type"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart-by-priority",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_by_priority",
+                  "fields": [
+                    {
+                      "name": "priority",
+                      "expression": "`priority`"
+                    },
+                    {
+                      "name": "wo_count",
+                      "expression": "`wo_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "wo_count",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count"
+                },
+                "color": {
+                  "fieldName": "priority",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Priority"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Work Orders by Priority"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 13,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart-by-tier",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_by_tier",
+                  "fields": [
+                    {
+                      "name": "customer_tier",
+                      "expression": "`customer_tier`"
+                    },
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "customer_tier",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Customer Tier"
+                },
+                "y": {
+                  "fieldName": "total_value",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total Value ($)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Quote Value by Customer Tier"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart-by-constraint",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_by_constraint",
+                  "fields": [
+                    {
+                      "name": "availability_constraint",
+                      "expression": "`availability_constraint`"
+                    },
+                    {
+                      "name": "avg_days",
+                      "expression": "`avg_days`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "availability_constraint",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Constraint"
+                },
+                "y": {
+                  "fieldName": "avg_days",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Avg Days to Complete"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Completion Days by Parts Constraint"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 18,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "section-detail",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Detail Breakdown"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 23,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "detail-table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "wo_detail",
+                  "fields": [
+                    {
+                      "name": "wo_type",
+                      "expression": "`wo_type`"
+                    },
+                    {
+                      "name": "priority",
+                      "expression": "`priority`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "customer_tier",
+                      "expression": "`customer_tier`"
+                    },
+                    {
+                      "name": "wo_count",
+                      "expression": "`wo_count`"
+                    },
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "avg_days",
+                      "expression": "`avg_days`"
+                    },
+                    {
+                      "name": "avg_parts_cost",
+                      "expression": "`avg_parts_cost`"
+                    },
+                    {
+                      "name": "avg_labor_cost",
+                      "expression": "`avg_labor_cost`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "wo_type",
+                    "displayName": "Type"
+                  },
+                  {
+                    "fieldName": "priority",
+                    "displayName": "Priority"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Region"
+                  },
+                  {
+                    "fieldName": "customer_tier",
+                    "displayName": "Tier"
+                  },
+                  {
+                    "fieldName": "wo_count",
+                    "displayName": "Count"
+                  },
+                  {
+                    "fieldName": "total_value",
+                    "displayName": "Total Value ($)"
+                  },
+                  {
+                    "fieldName": "avg_days",
+                    "displayName": "Avg Days"
+                  },
+                  {
+                    "fieldName": "avg_parts_cost",
+                    "displayName": "Avg Parts Cost"
+                  },
+                  {
+                    "fieldName": "avg_labor_cost",
+                    "displayName": "Avg Labor Cost"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Work Order Summary by Type, Priority, Region & Tier"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 24,
+            "width": 6,
+            "height": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "demand-fulfillment",
+      "displayName": "Demand Fulfillment",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "df-title",
+            "multilineTextboxSpec": {
+              "lines": ["## Demand Fulfillment Dashboard"]
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "df-subtitle",
+            "multilineTextboxSpec": {
+              "lines": ["Demand signal to payment chain \u2014 forecast accuracy, delivery performance, and spend analysis"]
+            }
+          },
+          "position": {"x": 0, "y": 1, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "kpi-total-pos",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_summary", "fields": [{"name": "total_pos", "expression": "`total_pos`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {"value": {"fieldName": "total_pos", "displayName": "Total POs", "format": {"type": "number", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}},
+              "frame": {"showTitle": true, "title": "Total Purchase Orders"}
+            }
+          },
+          "position": {"x": 0, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi-po-value",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_summary", "fields": [{"name": "total_po_value", "expression": "`total_po_value`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {"value": {"fieldName": "total_po_value", "displayName": "Total PO Value", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}},
+              "frame": {"showTitle": true, "title": "Total PO Value"}
+            }
+          },
+          "position": {"x": 2, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi-delivery-var",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_summary", "fields": [{"name": "avg_delivery_variance", "expression": "`avg_delivery_variance`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {"value": {"fieldName": "avg_delivery_variance", "displayName": "Avg Delivery Variance (days)"}},
+              "frame": {"showTitle": true, "title": "Avg Delivery Variance (days)"}
+            }
+          },
+          "position": {"x": 4, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "df-section-trends",
+            "multilineTextboxSpec": {"lines": ["### Monthly PO Trends"]}
+          },
+          "position": {"x": 0, "y": 5, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "chart-df-monthly",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_monthly", "fields": [{"name": "month", "expression": "`month`"}, {"name": "po_count", "expression": "`po_count`"}, {"name": "total_value", "expression": "`total_value`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "month", "scale": {"type": "temporal"}, "displayName": "Month"},
+                "y": {"scale": {"type": "quantitative"}, "fields": [{"fieldName": "po_count", "displayName": "Purchase Orders"}, {"fieldName": "total_value", "displayName": "Total Value ($)"}]}
+              },
+              "frame": {"showTitle": true, "title": "Monthly PO Volume & Value"}
+            }
+          },
+          "position": {"x": 0, "y": 6, "width": 6, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "df-section-breakdown",
+            "multilineTextboxSpec": {"lines": ["### Demand & Supply Breakdown"]}
+          },
+          "position": {"x": 0, "y": 12, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "chart-po-status",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_by_status", "fields": [{"name": "po_status", "expression": "`po_status`"}, {"name": "po_count", "expression": "`po_count`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {"fieldName": "po_count", "scale": {"type": "quantitative"}, "displayName": "Count"},
+                "color": {"fieldName": "po_status", "scale": {"type": "categorical"}, "displayName": "PO Status"}
+              },
+              "frame": {"showTitle": true, "title": "PO Status Distribution"}
+            }
+          },
+          "position": {"x": 0, "y": 13, "width": 3, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart-signal-type",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_by_signal_type", "fields": [{"name": "signal_type", "expression": "`signal_type`"}, {"name": "avg_variance", "expression": "`avg_variance`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "signal_type", "scale": {"type": "categorical"}, "displayName": "Signal Type"},
+                "y": {"fieldName": "avg_variance", "scale": {"type": "quantitative"}, "displayName": "Avg Forecast Variance"}
+              },
+              "frame": {"showTitle": true, "title": "Forecast Accuracy by Signal Type"}
+            }
+          },
+          "position": {"x": 3, "y": 13, "width": 3, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart-by-category",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_by_category", "fields": [{"name": "category", "expression": "`category`"}, {"name": "total_value", "expression": "`total_value`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "category", "scale": {"type": "categorical"}, "displayName": "Part Category"},
+                "y": {"fieldName": "total_value", "scale": {"type": "quantitative"}, "displayName": "Total PO Value ($)", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}
+              },
+              "frame": {"showTitle": true, "title": "PO Value by Part Category"}
+            }
+          },
+          "position": {"x": 0, "y": 18, "width": 3, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart-payment-status",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_payment", "fields": [{"name": "payment_status", "expression": "`payment_status`"}, {"name": "total_amount", "expression": "`total_amount`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {"fieldName": "total_amount", "scale": {"type": "quantitative"}, "displayName": "Total Amount"},
+                "color": {"fieldName": "payment_status", "scale": {"type": "categorical"}, "displayName": "Payment Status"}
+              },
+              "frame": {"showTitle": true, "title": "Invoice Payment Status"}
+            }
+          },
+          "position": {"x": 3, "y": 18, "width": 3, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "df-section-detail",
+            "multilineTextboxSpec": {"lines": ["### Detail Breakdown"]}
+          },
+          "position": {"x": 0, "y": 23, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "df-detail-table",
+            "queries": [{"name": "main_query", "query": {"datasetName": "df_detail", "fields": [{"name": "category", "expression": "`category`"}, {"name": "signal_type", "expression": "`signal_type`"}, {"name": "po_status", "expression": "`po_status`"}, {"name": "demand_region", "expression": "`demand_region`"}, {"name": "po_count", "expression": "`po_count`"}, {"name": "total_po_value", "expression": "`total_po_value`"}, {"name": "avg_forecast_variance", "expression": "`avg_forecast_variance`"}, {"name": "avg_delivery_variance", "expression": "`avg_delivery_variance`"}, {"name": "total_invoiced", "expression": "`total_invoiced`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {"fieldName": "category", "displayName": "Category"},
+                  {"fieldName": "signal_type", "displayName": "Signal Type"},
+                  {"fieldName": "po_status", "displayName": "PO Status"},
+                  {"fieldName": "demand_region", "displayName": "Region"},
+                  {"fieldName": "po_count", "displayName": "PO Count"},
+                  {"fieldName": "total_po_value", "displayName": "Total PO Value ($)"},
+                  {"fieldName": "avg_forecast_variance", "displayName": "Avg Forecast Var"},
+                  {"fieldName": "avg_delivery_variance", "displayName": "Avg Delivery Var (days)"},
+                  {"fieldName": "total_invoiced", "displayName": "Total Invoiced ($)"}
+                ]
+              },
+              "frame": {"showTitle": true, "title": "Demand Fulfillment by Category, Signal Type, Status & Region"}
+            }
+          },
+          "position": {"x": 0, "y": 24, "width": 6, "height": 7}
+        }
+      ]
+    }
+  ]
+}

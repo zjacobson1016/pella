@@ -26,7 +26,7 @@ def bronze_parts():
             "cloudFiles.schemaHints",
             "part_id STRING, part_number STRING, part_name STRING, "
             "category STRING, subcategory STRING, piece_part_price DOUBLE, "
-            "standard_cost DOUBLE, lead_time_days INT, supplier_id STRING, "
+            "standard_cost DOUBLE, lead_time_days BIGINT, supplier_id STRING, "
             "unit_of_measure STRING, is_active BOOLEAN, "
             "_op STRING, _sequence BIGINT, updated_at TIMESTAMP",
         )
@@ -86,7 +86,7 @@ def bronze_demand_signals():
         .option(
             "cloudFiles.schemaHints",
             "signal_id STRING, part_id STRING, forecast_date DATE, "
-            "forecasted_qty INT, actual_qty INT, signal_type STRING, "
+            "forecasted_qty BIGINT, actual_qty BIGINT, signal_type STRING, "
             "confidence_score DOUBLE, region STRING, created_at TIMESTAMP",
         )
         .load(f"{raw_path}/demand_signals/")
@@ -115,7 +115,7 @@ def bronze_purchase_orders():
         .option(
             "cloudFiles.schemaHints",
             "po_id STRING, signal_id STRING, part_id STRING, supplier_id STRING, "
-            "po_date DATE, expected_receipt_date DATE, ordered_qty INT, "
+            "po_date DATE, expected_receipt_date DATE, ordered_qty BIGINT, "
             "unit_price DOUBLE, po_status STRING, buyer_id STRING, created_at TIMESTAMP",
         )
         .load(f"{raw_path}/purchase_orders/")
@@ -144,7 +144,7 @@ def bronze_receivers():
         .option(
             "cloudFiles.schemaHints",
             "receiver_id STRING, po_id STRING, part_id STRING, "
-            "received_date DATE, received_qty INT, warehouse_location STRING, "
+            "received_date DATE, received_qty BIGINT, warehouse_location STRING, "
             "quality_status STRING, inspector_id STRING, created_at TIMESTAMP",
         )
         .load(f"{raw_path}/receivers/")
@@ -174,7 +174,7 @@ def bronze_invoices():
             "cloudFiles.schemaHints",
             "invoice_id STRING, po_id STRING, receiver_id STRING, supplier_id STRING, "
             "invoice_date DATE, invoice_amount DOUBLE, payment_status STRING, "
-            "payment_date DATE, days_to_payment INT, created_at TIMESTAMP",
+            "payment_date DATE, days_to_payment BIGINT, created_at TIMESTAMP",
         )
         .load(f"{raw_path}/invoices/")
         .select(

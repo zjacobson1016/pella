@@ -16,6 +16,12 @@ from pyspark.sql.types import DecimalType, IntegerType, DateType
     comment="Cleaned and validated parts CDC events. Source for dim_part_type1 and dim_part_type2.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_part_id", "part_id IS NOT NULL")
+@dp.expect_or_drop("valid_price", "piece_part_price >= 0")
+@dp.expect_or_drop("valid_cdc_op", "_op IN ('INSERT', 'UPDATE', 'DELETE')")
+@dp.expect("has_part_name", "part_name IS NOT NULL")
+@dp.expect("has_category", "category IS NOT NULL")
+@dp.expect("cost_not_exceeds_price", "standard_cost <= piece_part_price")
 def silver_parts():
     return (
         spark.readStream.table("bronze_parts")
@@ -52,6 +58,12 @@ def silver_parts():
     comment="Cleaned and validated customer CDC events. Source for dim_customer_type1 and dim_customer_type2.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_customer_id", "customer_id IS NOT NULL")
+@dp.expect_or_drop("valid_cdc_op", "_op IN ('INSERT', 'UPDATE', 'DELETE')")
+@dp.expect("has_customer_name", "customer_name IS NOT NULL")
+@dp.expect("valid_tier", "customer_tier IN ('STANDARD', 'PREMIUM', 'ENTERPRISE', 'GOLD', 'SILVER', 'BRONZE')")
+@dp.expect("valid_revenue", "annual_revenue >= 0")
+@dp.expect("has_region", "region IS NOT NULL")
 def silver_customers():
     return (
         spark.readStream.table("bronze_customers")
@@ -87,6 +99,11 @@ def silver_customers():
     comment="Cleaned demand signals. Drives purchase order creation.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_signal_id", "signal_id IS NOT NULL")
+@dp.expect_or_fail("valid_part_id", "part_id IS NOT NULL")
+@dp.expect_or_drop("positive_forecast", "forecasted_qty > 0")
+@dp.expect("valid_confidence", "confidence_score BETWEEN 0 AND 1")
+@dp.expect("has_forecast_date", "forecast_date IS NOT NULL")
 def silver_demand_signals():
     return (
         spark.readStream.table("bronze_demand_signals")
@@ -121,13 +138,18 @@ def silver_demand_signals():
     comment="Cleaned purchase orders. Downstream of demand signals.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_po_id", "po_id IS NOT NULL")
+@dp.expect_or_fail("valid_part_id", "part_id IS NOT NULL")
+@dp.expect_or_drop("positive_qty", "ordered_qty > 0")
+@dp.expect_or_drop("positive_unit_price", "unit_price > 0")
+@dp.expect("receipt_after_order", "expected_receipt_date >= po_date")
+@dp.expect("valid_po_status", "po_status IN ('OPEN', 'CLOSED', 'CANCELLED', 'PENDING', 'RECEIVED')")
 def silver_purchase_orders():
     return (
         spark.readStream.table("bronze_purchase_orders")
         .filter(
             F.col("po_id").isNotNull()
             & F.col("part_id").isNotNull()
-            & (F.col("ordered_qty") > 0)
         )
         .select(
             F.col("po_id"),
@@ -157,6 +179,11 @@ def silver_purchase_orders():
     comment="Cleaned goods receipts confirming physical part arrival.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_receiver_id", "receiver_id IS NOT NULL")
+@dp.expect_or_fail("valid_po_id", "po_id IS NOT NULL")
+@dp.expect_or_drop("positive_received_qty", "received_qty > 0")
+@dp.expect_or_drop("not_rejected", "quality_status != 'REJECTED'")
+@dp.expect("has_warehouse", "warehouse_location IS NOT NULL")
 def silver_receivers():
     return (
         spark.readStream.table("bronze_receivers")
@@ -189,6 +216,11 @@ def silver_receivers():
     comment="Cleaned supplier invoices completing the procure-to-pay chain.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_invoice_id", "invoice_id IS NOT NULL")
+@dp.expect_or_fail("valid_po_id", "po_id IS NOT NULL")
+@dp.expect_or_drop("positive_amount", "invoice_amount > 0")
+@dp.expect("valid_payment_status", "payment_status IN ('PAID', 'PENDING', 'OVERDUE', 'CANCELLED')")
+@dp.expect("reasonable_payment_days", "days_to_payment BETWEEN 0 AND 365")
 def silver_invoices():
     return (
         spark.readStream.table("bronze_invoices")
@@ -221,6 +253,11 @@ def silver_invoices():
     comment="Cleaned field work orders. Parts attach here; drives customer quotes and completion dates.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_wo_id", "wo_id IS NOT NULL")
+@dp.expect_or_fail("valid_customer_id", "customer_id IS NOT NULL")
+@dp.expect("valid_priority", "priority IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')")
+@dp.expect("valid_wo_status", "wo_status IN ('OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'PENDING')")
+@dp.expect("scheduled_after_created", "scheduled_date >= created_date")
 def silver_work_orders():
     return (
         spark.readStream.table("bronze_work_orders")
@@ -253,6 +290,12 @@ def silver_work_orders():
     comment="Cleaned customer quotes. Expected completion date driven by parts + labor availability.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_quote_id", "quote_id IS NOT NULL")
+@dp.expect_or_fail("valid_wo_id", "wo_id IS NOT NULL")
+@dp.expect_or_drop("positive_total", "total_amount > 0")
+@dp.expect("parts_plus_labor_equals_total", "ABS(parts_cost + labor_cost - total_amount) < 0.01")
+@dp.expect("completion_after_quote", "expected_completion_date >= quote_date")
+@dp.expect("valid_quote_status", "quote_status IN ('DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED')")
 def silver_customer_quotes():
     return (
         spark.readStream.table("bronze_customer_quotes")
@@ -291,6 +334,12 @@ def silver_customer_quotes():
     comment="Cleaned technician schedules. Available hours govern quote completion dates.",
     table_properties={"quality": "silver", "layer": "transformation"},
 )
+@dp.expect_or_fail("valid_schedule_id", "schedule_id IS NOT NULL")
+@dp.expect_or_fail("valid_technician_id", "technician_id IS NOT NULL")
+@dp.expect_or_drop("non_negative_hours", "available_hours >= 0")
+@dp.expect("booked_within_available", "booked_hours <= available_hours")
+@dp.expect("non_negative_remaining", "remaining_hours >= 0")
+@dp.expect("has_schedule_date", "schedule_date IS NOT NULL")
 def silver_labor_schedules():
     return (
         spark.readStream.table("bronze_labor_schedules")

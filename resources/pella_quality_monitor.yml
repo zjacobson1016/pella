@@ -1,0 +1,69 @@
+resources:
+  quality_monitors:
+    fact_work_order_completion_monitor:
+      table_name: ${var.catalog}.${var.schema}.fact_work_order_completion
+      assets_dir: /Workspace/Users/zach.jacobson@databricks.com/pella_monitor_assets
+      output_schema_name: ${var.catalog}.${var.schema}
+      snapshot: {}
+      schedule:
+        quartz_cron_expression: "0 0 8 * * ?"
+        timezone_id: "America/Chicago"
+      custom_metrics:
+        # --- Completeness checks ---
+        - name: pct_null_quote_id
+          definition: "avg(CASE WHEN quote_id IS NULL THEN 1 ELSE 0 END)"
+          input_columns:
+            - "quote_id"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: pct_null_expected_completion
+          definition: "avg(CASE WHEN expected_completion_date IS NULL THEN 1 ELSE 0 END)"
+          input_columns:
+            - "expected_completion_date"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: pct_null_total_amount
+          definition: "avg(CASE WHEN total_amount IS NULL THEN 1 ELSE 0 END)"
+          input_columns:
+            - "total_amount"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        # --- Validity checks ---
+        - name: pct_negative_total_amount
+          definition: "avg(CASE WHEN total_amount < 0 THEN 1 ELSE 0 END)"
+          input_columns:
+            - "total_amount"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: pct_negative_days_to_completion
+          definition: "avg(CASE WHEN days_to_completion < 0 THEN 1 ELSE 0 END)"
+          input_columns:
+            - "days_to_completion"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: pct_labor_exceeds_available
+          definition: "avg(CASE WHEN booked_hours > available_hours THEN 1 ELSE 0 END)"
+          input_columns:
+            - "booked_hours"
+            - "available_hours"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: avg_days_to_completion
+          definition: "avg(days_to_completion)"
+          input_columns:
+            - "days_to_completion"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE
+
+        - name: avg_total_amount
+          definition: "avg(total_amount)"
+          input_columns:
+            - "total_amount"
+          output_data_type: '{"metadata":{},"name":"output","nullable":true,"type":"double"}'
+          type: CUSTOM_METRIC_TYPE_AGGREGATE

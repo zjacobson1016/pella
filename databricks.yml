@@ -1,5 +1,6 @@
 bundle:
   name: pella-parts-forecasting
+  engine: direct
 
 include:
   - resources/*.yml
@@ -11,7 +12,9 @@ variables:
     default: "pella"
   volume:
     default: "raw_data"
-
+scripts:
+  generate_pella_data:
+    content: .venv/bin/python3 src/data_generator/01_generate_pella_data.py
 targets:
   dev:
     default: true

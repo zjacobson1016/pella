@@ -1,0 +1,9 @@
+resources:
+  dashboards:
+    pella_wo_completion_dashboard:
+      display_name: "[${bundle.target}] Pella Work Order Completion Dashboard"
+      warehouse_id: bce0a02b2be86f1b
+      file_path: ../src/dashboard/pella_wo_completion.lvdash.json
+      permissions:
+        - level: CAN_MANAGE
+          group_name: users
