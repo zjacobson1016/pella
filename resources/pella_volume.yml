@@ -1,8 +1,0 @@
-resources:
-  volumes:
-    pella_raw_data:
-      catalog_name: ${var.catalog}
-      schema_name: ${var.schema}
-      name: ${var.volume}
-      volume_type: MANAGED
-      comment: "Raw synthetic data landing zone for Pella parts forecasting pipeline"
